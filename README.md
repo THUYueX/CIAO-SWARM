@@ -1,0 +1,3 @@
+支持多架无人机同时起飞
+shell中有一键起飞脚本
+起飞后 按照是否emergency、warning、normal判定进行避障飞行
