@@ -1,0 +1,8 @@
+prefix=/home/wumengyu/swarm/catkin_ws/install
+
+Name: swarm_with_camera
+Description: Description of swarm_with_camera
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 

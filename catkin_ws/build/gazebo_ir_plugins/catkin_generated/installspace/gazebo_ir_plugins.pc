@@ -1,0 +1,8 @@
+prefix=/home/wumengyu/swarm/catkin_ws/install
+
+Name: gazebo_ir_plugins
+Description: Description of gazebo_ir_plugins
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 

@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<launch>
+    <!-- 设置环境变量 -->
+    <env name="PX4_SITL_WORLD" value="empty"/>
+    
+    <!-- 启动 PX4 SITL (内部已包含MAVROS) -->
+    <include file="$(find px4)/launch/posix_sitl.launch">
+    </include>
+
+    <!-- 等待PX4启动 -->
+    <arg name="node_start_delay" default="15.0" />
+    
+    <!-- 生成自定义无人机模型 -->
+    <node name="spawn_custom_model" pkg="gazebo_ros" type="spawn_model"
+          args="-sdf -file $(find mavlink_sitl_gazebo)/models/wmy_iris_camRay/wmy_iris_camRay.sdf -model wmy_iris_camRay -x 0 -y 0 -z 0.5"
+          launch-prefix="bash -c 'sleep $(arg node_start_delay); $0 $@' "
+          output="screen"/>
+</launch>

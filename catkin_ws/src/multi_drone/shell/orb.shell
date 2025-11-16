@@ -1,0 +1,12 @@
+#!/bin/bash
+
+echo "=== 启动 ORB-SLAM3 Mono ==="
+
+source /opt/ros/melodic/setup.bash
+source ~/swarm/catkin_ws/devel/setup.bash
+export ROS_PACKAGE_PATH=~/swarm/ORB_SLAM3/ORB_SLAM3/Examples/ROS:$ROS_PACKAGE_PATH
+
+
+cd ~/swarm/ORB_SLAM3/ORB_SLAM3
+
+rosrun ORB_SLAM3 Mono Vocabulary/ORBvoc.txt Examples/Monocular/drone_camera.yaml

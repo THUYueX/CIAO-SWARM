@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>infrared_msgs</name>
+  <version>0.0.0</version>
+  <description>Infrared sensor messages for Gazebo simulation</description>
+  <maintainer email="wumengyu@todo.todo">wumengyu</maintainer>
+  <license>BSD</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <!-- 构建时依赖 -->
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>message_generation</build_depend>
+  <build_depend>roscpp</build_depend>
+  <build_depend>rospy</build_depend>
+  <build_depend>std_msgs</build_depend>
+
+  <!-- 运行时依赖 -->
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>message_runtime</exec_depend>
+  <exec_depend>roscpp</exec_depend>
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+
+</package>

@@ -1,0 +1,8 @@
+prefix=/home/wumengyu/swarm/catkin_ws/devel
+
+Name: offboard_sin
+Description: Description of offboard_sin
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 
