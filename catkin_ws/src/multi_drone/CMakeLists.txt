@@ -209,6 +209,17 @@ catkin_install_python(PROGRAMS
   src/multi_drone.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  geometry_msgs
+  tf2_ros
+  tf2
+)
+
+
+add_executable(tf_publisher src/tf_publisher.cpp)
+target_link_libraries(tf_publisher ${catkin_LIBRARIES})
+
 
 
 
