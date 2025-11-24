@@ -37,7 +37,7 @@ class DepthEstimator:
         rospy.loginfo(f"[{ns}] Dedicated MiDaS model loaded in {load_time:.2f}s")
 
     def process_ros_image(self, ros_image_msg):
-        """处理ROS图像消息 - 严格时间戳同步"""
+        """处理ROS图像消息"""
         try:
             # 使用RGB图像的精确时间戳
             rgb_timestamp = ros_image_msg.header.stamp
@@ -151,18 +151,28 @@ class DepthEstimator:
             # 预处理
             image_np = np.array(image)
             input_batch = self.transform(image_np)
-            
-            # 模型推理
+
+            # 模型推理 ← 这里调用MiDaS！
             inference_start = time.time()
             with torch.no_grad():
-                depth_map = self.model(input_batch)
+                depth_map = self.model(input_batch)  # ← MiDaS模型调用
             inference_time = time.time() - inference_start
+
+            # 将深度图转换为米为单位
+            depth_np = depth_map.squeeze().numpy()
             
-            # 每20帧输出一次纯推理时间
-            if self.processing_counter % 20 == 0:
-                rospy.loginfo(f"[{self.ns}] Pure Inference Time: {inference_time:.3f}s, FPS: {1.0/inference_time:.1f}")
+            # 方案1: 归一化并缩放到合理范围 (0-10米)
+            depth_normalized = (depth_np - depth_np.min()) / (depth_np.max() - depth_np.min())
+            depth_meters = depth_normalized * 10.0  # 缩放到0-10米范围
             
-            return depth_map.squeeze().numpy()
+            # 或者方案2: 直接除以一个缩放因子 (根据你的场景调整)
+            # depth_meters = depth_np / 100.0
+            
+            print(f"原始深度范围: {depth_np.min():.3f} - {depth_np.max():.3f}")
+            print(f"转换后深度范围: {depth_meters.min():.3f} - {depth_meters.max():.3f}米")
+
+            return depth_meters
+
         except Exception as e:
             rospy.logerr(f"[{self.ns}] Depth estimation failed: {str(e)}")
             return None
