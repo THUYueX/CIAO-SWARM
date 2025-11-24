@@ -1,6 +1,9 @@
 #include <ros/ros.h>
 #include <tf2_ros/transform_broadcaster.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/Quaternion.h>
+#include <tf2/LinearMath/Quaternion.h>
+#include <cmath> 
 #include <string>
 
 class DroneTFPublisher {
@@ -18,24 +21,29 @@ public:
         transform.header.stamp = ros::Time::now();
         transform.header.frame_id = "map_ned";
         transform.child_frame_id = ns_ + "/base_link_frd";
-        
         transform.transform.translation.x = msg->pose.position.x;
         transform.transform.translation.y = msg->pose.position.y;
         transform.transform.translation.z = msg->pose.position.z;
         transform.transform.rotation = msg->pose.orientation;
-        
         br_.sendTransform(transform);
-        
-        // 发布相机坐标系
+
+        // 发布相机坐标系 - 修复旋转
         geometry_msgs::TransformStamped cam_transform;
         cam_transform.header.stamp = ros::Time::now();
         cam_transform.header.frame_id = ns_ + "/base_link_frd";
         cam_transform.child_frame_id = ns_ + "/robot_camera_link";
-        cam_transform.transform.translation.x = 0.1;
+        cam_transform.transform.translation.x = 0.1;  // 前方0.1米
         cam_transform.transform.translation.y = 0;
         cam_transform.transform.translation.z = 0;
-        cam_transform.transform.rotation.w = 1.0;
-        
+
+        // 关键修复：先绕X轴-90度（让Z朝前），再绕Z轴-90度（对齐前向）
+        tf2::Quaternion quat;
+        quat.setRPY(-M_PI/2, 0, -M_PI/2);  // 绕X轴-90度 + 绕Z轴-90度
+        cam_transform.transform.rotation.x = quat.x();
+        cam_transform.transform.rotation.y = quat.y();
+        cam_transform.transform.rotation.z = quat.z();
+        cam_transform.transform.rotation.w = quat.w();
+
         br_.sendTransform(cam_transform);
     }
     
