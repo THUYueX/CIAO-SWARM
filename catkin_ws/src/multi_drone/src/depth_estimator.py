@@ -6,6 +6,8 @@ import numpy as np
 import cv2
 from sensor_msgs.msg import Image as ROSImage
 from cv_bridge import CvBridge
+from simple_pointcloud_generator import SimplePointCloudGenerator
+from sensor_msgs.msg import PointCloud2, PointField
 import rospy
 import time
 import threading
@@ -15,6 +17,11 @@ class DepthEstimator:
         self.ns = ns
         self.bridge = CvBridge()
         self.processing_counter = 0
+        # 创建点云生成器实例
+        self.pcd_generator = SimplePointCloudGenerator()
+        
+        # 点云发布器
+        self.pcd_publisher = rospy.Publisher(f'/{ns}/pointcloud', PointCloud2, queue_size=10)
         
         # 每个无人机独立加载自己的模型实例
         rospy.loginfo(f"[{ns}] Loading dedicated MiDaS model...")
@@ -47,6 +54,10 @@ class DepthEstimator:
                 
             # 3. 创建深度图时强制使用相同时间戳
             color_msg, mono_msg = self.create_depth_ros_msgs(depth_map, rgb_timestamp)
+            # 调用simple点云生成器
+            points = self.pcd_generator.depth_to_pcd(depth_map)
+            pointcloud_msg = self.pcd_generator.create_pointcloud2_msg(points, frame_id = f"{self.ns}/robot_camera_link")
+            self.pcd_publisher.publish(pointcloud_msg)
             
             # 记录时间戳信息（用于调试）
             if self.processing_counter % 10 == 0:

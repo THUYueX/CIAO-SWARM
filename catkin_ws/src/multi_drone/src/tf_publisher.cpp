@@ -58,7 +58,7 @@ int main(int argc, char** argv) {
     std::string namespace_str = argv[1];
     DroneTFPublisher publisher(namespace_str);
     
-    ros::Rate rate(50);  // 50Hz
+    ros::Rate rate(100);  // 100Hz
     while (ros::ok()) {
         ros::spinOnce();  // 处理回调
         rate.sleep();     // 保持频率
