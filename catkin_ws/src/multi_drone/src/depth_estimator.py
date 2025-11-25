@@ -51,11 +51,13 @@ class DepthEstimator:
             depth_map = self.estimate_depth(rgb_image)
             if depth_map is None:
                 return None, None, None
+
+            depth_map_resized = cv2.resize(depth_map, (320, 240), interpolation=cv2.INTER_NEAREST)
                 
             # 3. 创建深度图时强制使用相同时间戳
-            color_msg, mono_msg = self.create_depth_ros_msgs(depth_map, rgb_timestamp)
+            color_msg, mono_msg = self.create_depth_ros_msgs(depth_map_resized, rgb_timestamp)
             # 调用simple点云生成器
-            points = self.pcd_generator.depth_to_pcd(depth_map)
+            points = self.pcd_generator.depth_to_pcd(depth_map_resized)
             pointcloud_msg = self.pcd_generator.create_pointcloud2_msg(points, frame_id = f"{self.ns}/robot_camera_link")
             self.pcd_publisher.publish(pointcloud_msg)
             
@@ -78,11 +80,9 @@ class DepthEstimator:
             if timestamp is None:
                 timestamp = rospy.Time.now()
                 
-            # 调整深度图尺寸
-            depth_resized = cv2.resize(depth_map, (320, 240))
             
             # 1. 彩色深度图
-            depth_normalized = cv2.normalize(depth_resized, None, 0, 255, cv2.NORM_MINMAX)
+            depth_normalized = cv2.normalize(depth_map, None, 0, 255, cv2.NORM_MINMAX)
             depth_uint8 = depth_normalized.astype(np.uint8)
             depth_colored = cv2.applyColorMap(depth_uint8, cv2.COLORMAP_JET)
             
@@ -97,7 +97,7 @@ class DepthEstimator:
             color_msg.data = depth_colored.tobytes()
             
             # 2. 单通道深度图
-            depth_mm = (depth_resized * 5000).astype(np.uint16)
+            depth_mm = (depth_map * 5000).astype(np.uint16)
             
             mono_msg = ROSImage()
             mono_msg.header.stamp = timestamp  # 使用相同的时间戳
@@ -151,6 +151,8 @@ class DepthEstimator:
             # 预处理
             image_np = np.array(image)
             input_batch = self.transform(image_np)
+            print(f"输入图像尺寸: {image_np.shape}")  # 添加这行
+            print(f"MiDaS输入尺寸: {input_batch.shape}")  # 添加这
 
             # 模型推理 ← 这里调用MiDaS！
             inference_start = time.time()

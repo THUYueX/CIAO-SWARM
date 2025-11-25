@@ -7,7 +7,7 @@ import sensor_msgs.point_cloud2 as pcd2
 from cv_bridge import CvBridge
 
 class SimplePointCloudGenerator:
-    def __init__(self, fx = 277.191356, fy = 277.191356, cx = 160.5, cy = 120.5):
+    def __init__(self, fx = 277.191356, fy = 277.191356, cx = 160.0, cy = 120.0):
         """
         简化版点云生成器
         fx, fy: 相机焦距
@@ -33,12 +33,11 @@ class SimplePointCloudGenerator:
         
         self.bridge = CvBridge()
         
-    def depth_to_pcd(self, depth_image):
+    def depth_to_pcd(self, depth_image, distance = 10, remove_far_percentile=30):
         """
-        将深度图转换为点云
+        将深度图转换为点云 - 使用减法反转远近关系
         """
-        print(f"深度图范围: {depth_image.min():.3f} - {depth_image.max():.3f}")
-        print(f"深度图尺寸: {depth_image.shape}")
+        print(f"输入深度图范围: {depth_image.min():.3f} - {depth_image.max():.3f}")
         height, width = depth_image.shape
         
         # 生成像素网格
@@ -46,33 +45,41 @@ class SimplePointCloudGenerator:
         v = np.arange(height)
         u, v = np.meshgrid(u, v)
         
+        # 关键：用减法反转远近关系
+        z = distance - depth_image
+        # z = depth_image
+        
+        print(f"反转后深度范围: {z.min():.3f} - {z.max():.3f}米")
+        
         # 反投影到3D空间
-        z = depth_image
         x = (u - self.camera_matrix[0,2]) * z / self.camera_matrix[0,0]
         y = (v - self.camera_matrix[1,2]) * z / self.camera_matrix[1,1]
         
         # 重组为点云 (N, 3)
         points = np.stack([x, y, z], axis=-1).reshape(-1, 3)
         
-        # 增强过滤：基于深度变化和统计
+        # 使用反转后的深度值进行百分比过滤
         z_flat = z.reshape(-1)
         
-        # 计算深度统计信息
-        depth_mean = np.mean(z_flat[z_flat > 0.1])  # 忽略太近的点
-        depth_std = np.std(z_flat[z_flat > 0.1])
+        # 移除最远的30%点（现在z值小的点是最远的）
+        far_threshold = np.percentile(z_flat[z_flat > 0], remove_far_percentile)
         
-        # 动态过滤阈值
         valid_mask = (
-            (z_flat > 0.3) &                    # 最小深度
-            (z_flat < 8.0) &                    # 最大深度  
-            (np.isfinite(z_flat)) &             # 有效数值
-            (np.abs(z_flat - depth_mean) < 2.0 * depth_std)  # 移除深度异常值
+            (z_flat <= far_threshold) &           # 保留较近的点（z值大的）
+            (z_flat > 0.1) &                      # 最小深度
+            (z_flat < 10.0) &                     # 最大深度
+            (np.isfinite(z_flat)) &
+            (np.abs(x.reshape(-1)) < 10.0) &
+            (np.abs(y.reshape(-1)) < 8.0)
         )
         
         points = points[valid_mask]
         
-        print(f"深度统计: 均值={depth_mean:.2f}m, 标准差={depth_std:.2f}m")
-        print(f"有效点数: {len(points)} / {height*width} ({len(points)/(height*width)*100:.1f}%)")
+        valid_count = len(points)
+        total_count = height * width
+        
+        print(f"过滤后: {valid_count} / {total_count} ({valid_count/total_count*100:.1f}%)")
+        print(f"点云距离范围: {points[:,2].min():.3f} - {points[:,2].max():.3f}米")
         
         return points
     
