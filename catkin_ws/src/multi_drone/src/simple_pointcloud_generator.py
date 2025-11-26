@@ -33,7 +33,7 @@ class SimplePointCloudGenerator:
         
         self.bridge = CvBridge()
         
-    def depth_to_pcd(self, depth_image, distance = 10, remove_far_percentile=30):
+    def depth_to_pcd(self, depth_image, distance = 10, scale = 200.0, remove_far_percentile=30):
         """
         将深度图转换为点云 - 使用减法反转远近关系
         """
@@ -45,11 +45,16 @@ class SimplePointCloudGenerator:
         v = np.arange(height)
         u, v = np.meshgrid(u, v)
         
-        # 关键：用减法反转远近关系
-        z = distance - depth_image
-        # z = depth_image
-        
-        print(f"反转后深度范围: {z.min():.3f} - {z.max():.3f}米")
+        # 用减法反转远近关系
+        # z = distance - depth_image
+        # print(f"反转后深度范围: {z.min():.3f} - {z.max():.3f}米")        
+        # 取倒数并缩放
+        depth_safe = np.where(depth_image > 0, depth_image, 0.001)
+        z_inverted = 1.0 / depth_safe  # 取倒数：原来值大=近 → 现在值大=远
+        z = z_inverted * scale         # 缩放到合理范围
+    
+        print(f"取倒数后范围: {z_inverted.min():.6f} - {z_inverted.max():.6f}")
+        print(f"缩放后深度范围: {z.min():.3f} - {z.max():.3f}米")
         
         # 反投影到3D空间
         x = (u - self.camera_matrix[0,2]) * z / self.camera_matrix[0,0]

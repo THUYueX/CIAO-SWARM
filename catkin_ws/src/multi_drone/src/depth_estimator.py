@@ -154,7 +154,7 @@ class DepthEstimator:
             print(f"输入图像尺寸: {image_np.shape}")  # 添加这行
             print(f"MiDaS输入尺寸: {input_batch.shape}")  # 添加这
 
-            # 模型推理 ← 这里调用MiDaS！
+            # 模型推理 ← 这里调用MiDaS
             inference_start = time.time()
             with torch.no_grad():
                 depth_map = self.model(input_batch)  # ← MiDaS模型调用
@@ -163,9 +163,9 @@ class DepthEstimator:
             # 将深度图转换为米为单位
             depth_np = depth_map.squeeze().numpy()
             
-            # 方案1: 归一化并缩放到合理范围 (0-10米)
+            # 方案1: 归一化并缩放到合理范围 (200-700 -> 0-100)
             depth_normalized = (depth_np - depth_np.min()) / (depth_np.max() - depth_np.min())
-            depth_meters = depth_normalized * 10.0  # 缩放到0-10米范围
+            depth_meters = depth_normalized * 100.0  # 缩放到0-100范围
             
             # 或者方案2: 直接除以一个缩放因子 (根据你的场景调整)
             # depth_meters = depth_np / 100.0

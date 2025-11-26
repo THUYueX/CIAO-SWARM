@@ -180,7 +180,7 @@ class MultiDroneController:
     def __init__(self):
         self.drones = [
             DroneUnit('wmy_iris_camRay0')
-            # DroneUnit('wmy_iris_camRay1'),
+            # DroneUnit('wmy_iris_camRay1')
             # DroneUnit('wmy_iris_camRay2')
         ]
         
