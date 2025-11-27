@@ -27,8 +27,8 @@ public:
         // 发布机体坐标系
         geometry_msgs::TransformStamped transform;
         transform.header.stamp = ros::Time::now();
-        transform.header.frame_id = "map_ned";
-        transform.child_frame_id = ns + "/base_link_frd";
+        transform.header.frame_id = "map";
+        transform.child_frame_id = ns + "/base_link";
         transform.transform.translation.x = msg->pose.position.x;
         transform.transform.translation.y = msg->pose.position.y;
         transform.transform.translation.z = msg->pose.position.z;
@@ -38,7 +38,7 @@ public:
         // 发布相机坐标系
         geometry_msgs::TransformStamped cam_transform;
         cam_transform.header.stamp = ros::Time::now();
-        cam_transform.header.frame_id = ns + "/base_link_frd";
+        cam_transform.header.frame_id = ns + "/base_link";
         cam_transform.child_frame_id = ns + "/robot_camera_link";
         cam_transform.transform.translation.x = 0.1;
         cam_transform.transform.translation.y = 0;

@@ -108,7 +108,7 @@ class DroneUnit:
                         # 高度控制
                         height_control = self._height_control()
                         
-                        # 运动决策交给DRLAgent
+                        # DRLAgent
                         vel_cmd = self.drl_agent.make_decision(
                             depth_map=depth_map,
                             height_control=height_control,

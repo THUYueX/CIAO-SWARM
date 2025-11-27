@@ -1,0 +1,91 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="px4_home" default="/home/wumengyu/swarm/gazabo/PX4-Autopilot"/>
+    
+    <!-- 设置环境变量 -->
+    <env name="GAZEBO_PLUGIN_PATH" value="$(arg px4_home)/build/px4_sitl_default/build_gazebo-classic"/>
+    <env name="GAZEBO_MODEL_PATH" value="$(arg px4_home)/Tools/simulation/gazebo-classic/sitl_gazebo-classic/models"/>
+    
+    <!-- 启动Gazebo -->
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+        <arg name="world_name" value="$(arg px4_home)/Tools/simulation/gazebo-classic/sitl_gazebo-classic/worlds/drone_env.world"/>
+        <arg name="gui" value="true"/>
+    </include>
+
+    <!-- 第1架无人机 -->
+    <group ns="wmy_iris_camRay0">
+        <arg name="ID" value="0"/>
+        <arg name="fcu_url" default="udp://:14540@localhost:14560"/>
+        
+        <include file="$(find px4)/launch/single_vehicle_spawn.launch">
+            <arg name="x" value="0"/>
+            <arg name="y" value="0"/>
+            <arg name="z" value="0.5"/>
+            <arg name="vehicle" value="wmy_iris_camRay"/>
+            <arg name="mavlink_udp_port" value="14560"/>
+            <arg name="mavlink_tcp_port" value="4560"/>
+            <arg name="ID" value="$(arg ID)"/>
+        </include>
+        
+        <include file="$(find mavros)/launch/px4.launch">
+            <arg name="fcu_url" value="$(arg fcu_url)"/>
+            <arg name="gcs_url" value=""/>
+            <arg name="tgt_system" value="$(eval 1 + arg('ID'))"/>
+            <arg name="tgt_component" value="1"/>
+        </include>
+
+	<!-- 无人机0的TF发布器 -->
+	<node name="drone0_tf_publisher" pkg="multi_drone" type="tf_publisher" 
+	      args="wmy_iris_camRay0" output="screen"/>
+    </group>
+
+    <!-- 第2架无人机 -->
+    <group ns="wmy_iris_camRay1">
+        <arg name="ID" value="1"/>
+        <arg name="fcu_url" default="udp://:14541@localhost:14561"/>
+        
+        <include file="$(find px4)/launch/single_vehicle_spawn.launch">
+            <arg name="x" value="0"/>
+            <arg name="y" value="2"/>
+            <arg name="z" value="0.5"/>
+            <arg name="vehicle" value="wmy_iris_camRay"/>
+            <arg name="mavlink_udp_port" value="14561"/>
+            <arg name="mavlink_tcp_port" value="4561"/>
+            <arg name="ID" value="$(arg ID)"/>
+        </include>
+        
+        <include file="$(find mavros)/launch/px4.launch">
+            <arg name="fcu_url" value="$(arg fcu_url)"/>
+            <arg name="gcs_url" value=""/>
+            <arg name="tgt_system" value="$(eval 1 + arg('ID'))"/>
+            <arg name="tgt_component" value="1"/>
+        </include>
+	<!-- 无人机1的TF发布器 -->
+	<node name="drone1_tf_publisher" pkg="multi_drone" type="tf_publisher" 
+	      args="wmy_iris_camRay1" output="screen"/>
+    </group>
+
+    <!-- 第3架无人机 -->
+    <group ns="wmy_iris_camRay2">
+        <arg name="ID" value="2"/>
+        <arg name="fcu_url" default="udp://:14542@localhost:14562"/>
+        
+        <include file="$(find px4)/launch/single_vehicle_spawn.launch">
+            <arg name="x" value="0"/>
+            <arg name="y" value="4"/>
+            <arg name="z" value="0.5"/>
+            <arg name="vehicle" value="wmy_iris_camRay"/>
+            <arg name="mavlink_udp_port" value="14562"/>
+            <arg name="mavlink_tcp_port" value="4562"/>
+            <arg name="ID" value="$(arg ID)"/>
+        </include>
+        
+        <include file="$(find mavros)/launch/px4.launch">
+            <arg name="fcu_url" value="$(arg fcu_url)"/>
+            <arg name="gcs_url" value=""/>
+            <arg name="tgt_system" value="$(eval 1 + arg('ID'))"/>
+            <arg name="tgt_component" value="1"/>
+        </include>
+    </group>
+
+</launch>
