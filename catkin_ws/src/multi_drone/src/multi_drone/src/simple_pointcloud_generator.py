@@ -31,7 +31,7 @@ class SimplePointCloudGenerator:
             PointField("z", 8, PointField.FLOAT32, 1),
         ]
         
-        self.bridge = CvBridge()
+        self.bridge = CvBridge()    
         
     def depth_to_pcd(self, depth_image, distance = 10, scale = 200.0, remove_far_percentile=30):
         """
@@ -98,6 +98,7 @@ class SimplePointCloudGenerator:
         
         msg = pcd2.create_cloud(header, self.fields, points)
         return msg
+    
 
 class PointCloudNode:
     def __init__(self):

@@ -7,45 +7,56 @@
 #include <string>
 #include <vector>
 #include <sstream>
-#include <boost/bind.hpp>
+#include <functional>
 
 class MultiDroneTFPublisher {
 public:
     MultiDroneTFPublisher(const std::vector<std::string>& namespaces) {
         for (const auto& ns : namespaces) {
             std::string topic_name = ns + "/mavros/local_position/pose";
+            
+            // 使用lambda函数避免boost::bind的问题
+            auto callback = [this, ns](const geometry_msgs::PoseStamped::ConstPtr& msg) {
+                this->poseCallback(msg, ns);
+            };
+            
             ros::Subscriber sub = nh_.subscribe<geometry_msgs::PoseStamped>(
-                topic_name, 10, 
-                boost::bind(&MultiDroneTFPublisher::poseCallback, this, _1, ns)
-            );
+                topic_name, 10, callback);
+                
             pose_subs_.push_back(sub);
             ROS_INFO("TF Publisher started for namespace: %s", ns.c_str());
         }
     }
     
     void poseCallback(const geometry_msgs::PoseStamped::ConstPtr& msg, const std::string& ns) {
-        // 发布机体坐标系
+        // 1. 发布机体坐标系 - 与世界坐标系完全对齐
         geometry_msgs::TransformStamped transform;
         transform.header.stamp = ros::Time::now();
         transform.header.frame_id = "map";
         transform.child_frame_id = ns + "/base_link";
+        
         transform.transform.translation.x = msg->pose.position.x;
-        transform.transform.translation.y = msg->pose.position.y;
+        transform.transform.translation.y = msg->pose.position.y;  
         transform.transform.translation.z = msg->pose.position.z;
         transform.transform.rotation = msg->pose.orientation;
+        
         br_.sendTransform(transform);
 
-        // 发布相机坐标系
+        // 2. 发布相机坐标系 - 使用你原来的旋转
         geometry_msgs::TransformStamped cam_transform;
         cam_transform.header.stamp = ros::Time::now();
         cam_transform.header.frame_id = ns + "/base_link";
         cam_transform.child_frame_id = ns + "/robot_camera_link";
-        cam_transform.transform.translation.x = 0.1;
-        cam_transform.transform.translation.y = 0;
-        cam_transform.transform.translation.z = 0;
-
+        
+        // 相机在机体前方0.1米
+        cam_transform.transform.translation.x = 0.1;  // 机体前方
+        cam_transform.transform.translation.y = 0;    // 机体左侧  
+        cam_transform.transform.translation.z = 0;    // 机体上方
+        
+        // 使用你原来的旋转：让相机的Z轴作为前向（X）
         tf2::Quaternion quat;
-        quat.setRPY(-M_PI/2, 0, -M_PI/2);
+        quat.setRPY(-M_PI/2, 0, -M_PI/2);  // 你原来的旋转
+        
         cam_transform.transform.rotation.x = quat.x();
         cam_transform.transform.rotation.y = quat.y();
         cam_transform.transform.rotation.z = quat.z();
@@ -53,7 +64,6 @@ public:
 
         br_.sendTransform(cam_transform);
     }
-    
 private:
     ros::NodeHandle nh_;
     std::vector<ros::Subscriber> pose_subs_;
@@ -76,7 +86,7 @@ int main(int argc, char** argv) {
     
     MultiDroneTFPublisher publisher(namespaces);
     
-    ros::spin();  // 使用spin而不是spinOnce+循环
+    ros::spin();
     
     return 0;
 }
